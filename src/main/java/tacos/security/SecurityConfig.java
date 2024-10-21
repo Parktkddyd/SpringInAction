@@ -1,22 +1,23 @@
 package tacos.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.User;
+/*import org.springframework.security.core.userdetails.User;*/
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+/*import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.provisioning.JdbcUserDetailsManager;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;*/
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import javax.sql.DataSource;
+import tacos.User;
+import tacos.data.UserRepository;
+
+/*import javax.sql.DataSource;*/
 
 /*책의 실습에는 Spring Security 버전이  낮기 때문에 해당 클래스는 WebSecurityConfigurerAdapter 클래스를 상속받아 구현하였지만,
       현재 Spring Security 6.3.3 기준 해당 클래스는 지원 중단 되었고 SecurityFilterChain을 Bean으로 등록하여 사용함
@@ -25,17 +26,35 @@ import javax.sql.DataSource;
 
 @Configuration
 public class SecurityConfig{
-    private final DataSource dataSource;
+    /*private final DataSource dataSource;
 
     public SecurityConfig(DataSource dataSource) {
         this.dataSource = dataSource;
-    }
+    }*/
 
-    @Bean
+    /*@Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
+    }*/
+
+    @Bean
+    public UserDetailsService userDetailsService(UserRepository userRepo){
+
+        return new UserDetailsService(){
+            @Override
+            public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+                User user = userRepo.findByUsername(username);
+                if(user!=null){
+                    return user;
+                }
+                throw new UsernameNotFoundException(
+                        "User '" + username + "' not found"
+                );
+            }
+        };
     }
     //Jdbc
+    /*
     @Bean
     public UserDetailsService userDetailsService(){
         JdbcUserDetailsManager jdbcUserDetailManager = new JdbcUserDetailsManager(dataSource);
@@ -53,7 +72,7 @@ public class SecurityConfig{
         jdbcUserDetailManager.createUser(user2);
 
         return jdbcUserDetailManager;
-    }
+    }*/
     // ImMemory
     /*@Bean
     public UserDetailsService userDetailsService(){
