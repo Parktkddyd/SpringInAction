@@ -8,12 +8,14 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-/*import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+/*import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;*/
 import org.springframework.security.web.SecurityFilterChain;
 
+import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import tacos.User;
 import tacos.data.UserRepository;
 
@@ -32,10 +34,10 @@ public class SecurityConfig{
         this.dataSource = dataSource;
     }*/
 
-    /*@Bean
+    @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
-    }*/
+    }
 
     @Bean
     public UserDetailsService userDetailsService(UserRepository userRepo){
@@ -94,9 +96,16 @@ public class SecurityConfig{
         http
                 .authorizeHttpRequests((request) ->
                         request.requestMatchers("/design", "/orders").hasRole("USER")
-                                .requestMatchers("/", "/**").permitAll()
+                                .anyRequest().permitAll()
                 )
-                .httpBasic(Customizer.withDefaults());
+                .formLogin((login) -> login.loginPage("/login").defaultSuccessUrl("/"))
+                .logout((logout) -> logout.logoutSuccessUrl("/"))
+                .csrf((csrf) -> csrf.
+                        ignoringRequestMatchers(new AntPathRequestMatcher("/h2-console/**")))
+                .headers((headers) -> headers
+                        .addHeaderWriter(new XFrameOptionsHeaderWriter(
+                                XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN
+                        )));
         return http.build();
     }
 
